@@ -23,54 +23,59 @@ if __name__ == "__main__":
     heat_eq = HeatEquation(L, T, b0t, b1t, beta, delta_t, delta_x, initial_condition)
     print(heat_eq.print_tri_diag())
     print(heat_eq.print_initial_condition_vector())
-    heat_eq.delta_checker()
+    heat_eq.sigma_checker()
     matrix = heat_eq.return_u_matrix()
+    print(f"temperature at time 250: {matrix[:, 250]}")
 
     # plot 3d
 
+    plt.rcParams['figure.figsize'] = [8, 8]
+    plt.rcParams['figure.dpi'] = 100
+    plt.rcParams['figure.autolayout'] = False
     X = np.arange(0, heat_eq.N, 1)
     Y = np.arange(1, heat_eq.len_t + 1, 1)
     X, Y = np.meshgrid(X, Y)
     Z = matrix[X, Y]
+    x_scale = (X - X.min()) / (X.max() - X.min())
     fig = plt.figure()
 
-    ax = fig.add_subplot(111, projection='3d')
-    surf = ax.plot_surface(X, Y, Z, cmap='hot', linewidth=0, antialiased=False)
+    ax = fig.add_subplot(211, projection='3d')
+    surf = ax.plot_surface(x_scale, Y, Z, cmap='hot', linewidth=0, antialiased=False)
     fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.title("Heat Equation")
-    plt.xlabel("X")
-    plt.clabel("U")
-    plt.ylabel("Time")
-    print(Z)
-    plt.show()
+    ax.set_xlabel("delta_x")
+    ax.set_ylabel("Time")
+    ax.set_zlabel("Temperature")
 
     # 2D heatmap
 
-    fig, ax = plt.subplots()
-    pcolor_subplot = ax.pcolor(X, Y, Z, cmap='hot')
+    ax = fig.add_subplot(212)
+    pcolor_subplot = ax.pcolor(x_scale, Y, Z, cmap='hot')
 
     fig.colorbar(pcolor_subplot, shrink=0.5, aspect=5)
     plt.title("Heat Equation")
-    plt.xlabel("X")
-    plt.ylabel("Time")
+    ax.set_xlabel("delta_x")
+    ax.set_ylabel("Time")
+    # label for Z
+
 
     plt.show()
 
     # animate heatmap for the rod
 
-    fig, ax = plt.subplots()
-    pcolor_subplot = ax.pcolor(X, Y, Z, cmap='hot')
-    fig.colorbar(pcolor_subplot, shrink=0.5, aspect=5)
-    plt.title("Heat Equation")
-    plt.xlabel("X")
-    plt.ylabel("Time")
+    #fig, ax = plt.subplots()
+    #pcolor_subplot = ax.pcolor(X, Y, Z, cmap='hot')
+    #fig.colorbar(pcolor_subplot, shrink=0.5, aspect=5)
+    #plt.title("Heat Equation")
+    #plt.xlabel("X")
+    #plt.ylabel("Time")
 
-    def animate(i):
-        pcolor_subplot.set_array(Z[i])
-        return pcolor_subplot,
+    #def animate(i):
+    #    pcolor_subplot.set_array(Z[i])
+    #    return pcolor_subplot,
 
-    anim = animation.FuncAnimation(fig, animate, frames=heat_eq.len_t, interval=100, blit=True)
-    plt.show()
+    #anim = animation.FuncAnimation(fig, animate, frames=heat_eq.len_t, interval=100, blit=True)
+    #plt.show()
 
 
 

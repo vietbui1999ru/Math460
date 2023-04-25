@@ -16,9 +16,10 @@ class HeatEquation(object):
         self.u_0 = u_0
         # length of time array
         self.len_t = int((self.T / self.delta_t) + 1)
+        #self.N = int((self.L / self.delta_x) + 1)
         self.N = int((self.L / self.delta_x) + 1)
-        self.delta = self.delta_t / (self.delta_x ** 2)
-        # self.delta_checker()
+        self.sigma = self.beta * self.delta_t / (self.delta_x ** 2)
+        # self.sigma_checker()
         # create tri-diagonal matrix
         self.A = self.create_tri_diag()
         # create u vector for u_0 initial condition
@@ -41,11 +42,11 @@ class HeatEquation(object):
     def print_initial_condition_vector(self):
         return f"init condition vector = {self.u}"
 
-    def delta_checker(self):
-        if self.delta < 0.5:
-            print(f"delta = {self.delta} < 0.5 => The model should work")
+    def sigma_checker(self):
+        if self.sigma < 0.5:
+            return f"sigma = {self.sigma} < 0.5 => The model should work"
         else:
-            print(f"delta = {self.delta} >= 0.5 => The model doesn't work")
+            return f"sigma = {self.sigma} >= 0.5 => The model doesn't work"
 
     def create_tri_diag(self):
         n = self.N
@@ -53,13 +54,17 @@ class HeatEquation(object):
         print(A.shape)
         for i in range(n):
             if i == 0:
-                A[i][i + 1] = self.delta
+                A[i][i + 1] = self.sigma
             elif i == n - 1:
-                A[i][i - 1] = self.delta
+                A[i][i - 1] = self.sigma
             else:
-                A[i][i + 1] = self.delta
-                A[i][i - 1] = self.delta
-            A[i][i] = 1 - 2 * self.delta
+                A[i][i + 1] = self.sigma
+                A[i][i - 1] = self.sigma
+            A[i][i] = 1 - 2 * self.sigma
+        A[0,:] = 0
+        A[0, 0] = 1
+        A[n - 1, :] = 0
+        A[n - 1, n - 1] = 1
         return A
 
     def print_tri_diag(self):
@@ -69,16 +74,17 @@ class HeatEquation(object):
         # set initial condition into the matrix
         # have to go back and check the 0 if it should be 1 or not
         self.u_matrix[:, 0] = self.u
-        self.u_matrix[0, 0] = self.u_bound[0]
-        self.u_matrix[self.N - 1, 0] = self.u_bound[self.N - 1]
+        self.u_matrix[0, :] = self.u_bound[0]
+        self.u_matrix[self.N - 1, :] = self.u_bound[self.N - 1]
 
         print("final u vector: ", self.u)
         print(f"u bound vector: {self.u_bound}")
         print(f"u matrix shape: {self.u_matrix.shape}")
         print(f"u matrix initial: {self.u_matrix[:, 0]}")
         # calculate u vector at each time step
-        for i in range(0, self.len_t - 1):
-            self.u_matrix[:, i + 1] = np.dot(self.A, self.u_matrix[:, i]) + self.beta * self.u_bound
+        for i in range(0, self.len_t):
+            #self.u_matrix[:, i + 1] = np.dot(self.A, self.u_matrix[:, i]) + self.delta * self.u_bound
+            self.u_matrix[:, i + 1] = np.dot(self.A, self.u_matrix[:, i]) 
             #print(f"u matrix at time step {i}: {self.u_matrix[:, i]}")
             #time.sleep(0.8)
 
