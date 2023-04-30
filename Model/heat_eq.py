@@ -52,7 +52,7 @@ class HeatEquation(object):
     def create_tri_diag(self):
         n = self.N
         A = np.zeros((n, n))
-        print(A.shape)
+        #print(A.shape)
         for i in range(n):
             if i == 0:
                 A[i][i + 1] = self.sigma
@@ -78,10 +78,10 @@ class HeatEquation(object):
         self.u_matrix[0, :] = self.u_bound[0]
         self.u_matrix[self.N - 1, :] = self.u_bound[self.N - 1]
 
-        print("final u vector: ", self.u)
-        print(f"u bound vector: {self.u_bound}")
-        print(f"u matrix shape: {self.u_matrix.shape}")
-        print(f"u matrix initial: {self.u_matrix[:, 0]}")
+       # print("final u vector: ", self.u)
+       # print(f"u bound vector: {self.u_bound}")
+       # print(f"u matrix shape: {self.u_matrix.shape}")
+       # print(f"u matrix initial: {self.u_matrix[:, 0]}")
         # calculate u vector at each time step
         for i in range(0, self.len_t):
             #self.u_matrix[:, i + 1] = np.dot(self.A, self.u_matrix[:, i]) + self.delta * self.u_bound
