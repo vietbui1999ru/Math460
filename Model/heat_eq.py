@@ -46,7 +46,8 @@ class HeatEquation(object):
         if self.sigma < 0.5:
             return f"sigma = {self.sigma} < 0.5 => The model should work"
         else:
-            return f"sigma = {self.sigma} >= 0.5 => The model doesn't work"
+            print(f"sigma = {self.sigma} >= 0.5 => The model doesn't work")
+            exit()
 
     def create_tri_diag(self):
         n = self.N

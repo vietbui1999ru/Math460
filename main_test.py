@@ -20,7 +20,7 @@ if __name__ == "__main__":
         #return 0
 
 
-    L, T, b0t, b1t, beta, delta_t, delta_x = 1, 1, 0, 0, 0.1, 0.004, 0.1
+    L, T, b0t, b1t, beta, delta_t, delta_x = 1, 1, 0, 0, 1, 0.00004, 0.01
     heat_eq = HeatEquation(L, T, b0t, b1t, beta, delta_t, delta_x, initial_condition)
     print(heat_eq.print_tri_diag())
     print(heat_eq.print_initial_condition_vector())
@@ -33,7 +33,6 @@ if __name__ == "__main__":
     plt.rcParams['figure.figsize'] = [8, 8]
     plt.rcParams['figure.dpi'] = 100
     plt.rcParams['figure.autolayout'] = False
-    plt.ioff()
     X = np.arange(0, heat_eq.N, 1)
     Y = np.arange(1, heat_eq.len_t + 1, 1)
     X, Y = np.meshgrid(X, Y)
@@ -80,15 +79,18 @@ if __name__ == "__main__":
     # label for Z
 
 
+    scale = int(ceil(delta_x / delta_t ** 2 / 250 ** 2 * 2.5))
+    print(f'scale {scale}')
     def animate(i):
-        pcolor_subplot.set_array(matrix[:, i])
+
+        pcolor_subplot.set_array(matrix[:, i * scale])
         # update label for y to reflect index i of time step
-        ax3.set_ylabel(f"Time: {i}")
+        ax3.set_ylabel(f"Time: {i * scale}")
         return pcolor_subplot,
 
     # animate for 2D heatmap
 
-    anim = animation.FuncAnimation(fig, animate, frames=heat_eq.len_t, interval=500, blit=True)
+    anim = animation.FuncAnimation(fig, animate, frames=heat_eq.len_t, interval= 150, blit=True)
     plt.show()
 
 
