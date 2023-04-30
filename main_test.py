@@ -22,11 +22,11 @@ if __name__ == "__main__":
 
     L, T, b0t, b1t, beta, delta_t, delta_x = 1, 1, 0, 0, 1, 0.00004, 0.01
     heat_eq = HeatEquation(L, T, b0t, b1t, beta, delta_t, delta_x, initial_condition)
-    print(heat_eq.print_tri_diag())
-    print(heat_eq.print_initial_condition_vector())
+    #print(heat_eq.print_tri_diag())
+    #print(heat_eq.print_initial_condition_vector())
     print(heat_eq.sigma_checker())
-    matrix = heat_eq.return_u_matrix()
-    print(f"temperature at time {heat_eq.len_t - 1}: {matrix[:, heat_eq.len_t - 1]}")
+    #matrix = heat_eq.return_u_matrix()
+    #print(f"temperature at time {heat_eq.len_t - 1}: {matrix[:, heat_eq.len_t - 1]}")
 
     # plot 3d
 
