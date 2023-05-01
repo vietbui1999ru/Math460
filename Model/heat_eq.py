@@ -52,7 +52,6 @@ class HeatEquation(object):
     def create_tri_diag(self):
         n = self.N
         A = np.zeros((n, n))
-        #print(A.shape)
         for i in range(n):
             if i == 0:
                 A[i][i + 1] = self.sigma

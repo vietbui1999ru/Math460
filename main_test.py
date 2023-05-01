@@ -9,8 +9,10 @@ from matplotlib import gridspec
 import matplotlib.animation as animation
 
 if __name__ == "__main__":
-    # make initial condition a function of x
+
+    # !CHANGE INITIAL CONDITIONS IN THIS FUNCTION HERE!
     def initial_condition(iteration, delta_x_step):
+
         return pow(sin(2 * pi * iteration * delta_x_step), 2)
         #return 0
         #return 2 * iteration * delta_x_step + 1
@@ -19,13 +21,14 @@ if __name__ == "__main__":
         #return 20 * sin(2 * pi * iteration * delta_x_step) + 40 * sin(4 * pi * iteration * delta_x_step) - 50 * sin(5 * pi * iteration * delta_x_step)
 
 
-    L, T, b0t, b1t, beta, delta_t, delta_x = 1, 1, -103.6, 140.5, .1, 0.04, 0.1
+    # !CHANGE DIFFERENT CONDITIONS IN THE COMPONENTS HERE!
+    L, T, b0t, b1t, beta, delta_t, delta_x = 1, 1, 20, 50, 1, 0.004, 0.01
     heat_eq = HeatEquation(L, T, b0t, b1t, beta, delta_t, delta_x, initial_condition)
-    #print(heat_eq.print_tri_diag())
-    #print(heat_eq.print_initial_condition_vector())
     print(heat_eq.sigma_checker())
     matrix = heat_eq.return_u_matrix()
-    #print(f"temperature at time {heat_eq.len_t - 1}: {matrix[:, heat_eq.len_t - 1]}")
+
+    print(f"matrix at x = 1/2, t = 1/2, {matrix[heat_eq.N // 2 ][heat_eq.len_t // 2]}")
+    print(f"matrix at x = 1/4, t = 1/2, {matrix[heat_eq.N // 4 ][heat_eq.len_t // 2]}")
 
     # plot 3d
 
@@ -65,21 +68,8 @@ if __name__ == "__main__":
 
     # animate 2D heatmap
 
-    ax3 = fig.add_subplot(gs[1, :])
-    pcolor_subplot = ax3.pcolor(x_scale, t_scale, Z, cmap='hot')
-
-    fig.colorbar(pcolor_subplot, shrink=0.5, aspect=5)
-    # set height of plot to be smaller
-    ax3.set_box_aspect(0.1)
-
-    plt.title("Animate Heat Equation")
-    ax3.set_xlabel("delta_x")
-    ax3.set_ylabel("Time")
-    # label for Z
-
-
-    scale = int(ceil(delta_x / delta_t ** 2 / 250 ** 2 * 2.5))
     #print(f'scale {scale}')
+    scale = int(ceil(delta_x / delta_t ** 2 / 250 ** 2 * 2.5))
     def animate(i):
 
         pcolor_subplot.set_array(matrix[:, i * scale])
@@ -89,7 +79,24 @@ if __name__ == "__main__":
 
     # animate for 2D heatmap
 
-    anim = animation.FuncAnimation(fig, animate, frames=heat_eq.len_t, interval= 150, blit=True)
+    a = input("Press Y to animate or N to skip: ")
+    if a == 'Y':
+        ax3 = fig.add_subplot(gs[1, :])
+        pcolor_subplot = ax3.pcolor(x_scale, t_scale, Z, cmap='hot')
+
+        fig.colorbar(pcolor_subplot, shrink=0.5, aspect=5)
+        # set height of plot to be smaller
+        ax3.set_box_aspect(0.1)
+
+        plt.title("Animate Heat Equation")
+        ax3.set_xlabel("delta_x")
+        ax3.set_ylabel("Time")
+        # label for Z
+        anim = animation.FuncAnimation(fig, animate, frames=heat_eq.len_t, interval= 150, blit=True)
+    elif a == 'N':
+        pass
+    else:
+        print("Invalid input, skipping animation")
     plt.show()
 
 
