@@ -1,6 +1,4 @@
 from pylab import *
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
 class HeatEquation(object):
@@ -88,6 +86,7 @@ class HeatEquation(object):
             #print(f"u matrix at time step {i}: {self.u_matrix[:, i]}")
             #time.sleep(0.8)
 
+        # set boundary condition into the matrix
         for i in range(0, self.len_t):
             self.u_matrix[0, i] = self.u_bound[0]
             self.u_matrix[self.N - 1, i] = self.u_bound[self.N - 1]

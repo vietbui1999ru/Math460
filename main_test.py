@@ -2,7 +2,7 @@ import numpy
 from pylab import *
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from Model.heat_eq import HeatEquation
+from heat_eq import HeatEquation
 from matplotlib import gridspec
 
 #import animation
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
 
     # !CHANGE DIFFERENT CONDITIONS IN THE COMPONENTS HERE!
-    L, T, b0t, b1t, beta, delta_t, delta_x = 1, 1, 20, 50, 1, 0.004, 0.01
+    L, T, b0t, b1t, beta, delta_t, delta_x = 1, 1, 20, 50, 1, 0.004, 0.1
     heat_eq = HeatEquation(L, T, b0t, b1t, beta, delta_t, delta_x, initial_condition)
     print(heat_eq.sigma_checker())
     matrix = heat_eq.return_u_matrix()
