@@ -1,4 +1,4 @@
-# Heat Equation Modelling
+# Heat Equation & Wave Equation Modelling
 
 ---
 
