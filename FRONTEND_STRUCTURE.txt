@@ -1,0 +1,36 @@
+frontend/
+├── .env.example                    # Environment variables template
+├── .eslintrc.cjs                   # ESLint configuration
+├── .gitignore                      # Git ignore patterns
+├── .prettierrc                     # Prettier code formatting config
+├── README.md                       # Frontend documentation
+├── index.html                      # HTML entry point
+├── package.json                    # Dependencies and scripts
+├── tsconfig.json                   # TypeScript configuration
+├── tsconfig.node.json              # TypeScript config for Vite
+├── vite.config.ts                  # Vite build configuration
+│
+└── src/
+    ├── main.tsx                    # Application entry point (50 lines)
+    ├── App.tsx                     # Main app component (450 lines)
+    │
+    ├── components/                 # React Components
+    │   ├── ParameterPanel.tsx      # Configuration UI (550 lines)
+    │   ├── PresetSelector.tsx      # Preset templates (250 lines)
+    │   ├── SimulationControls.tsx  # Playback controls (450 lines)
+    │   └── VisualizationCanvas.tsx # Plotly.js charts (400 lines)
+    │
+    ├── services/                   # API & WebSocket
+    │   ├── api.ts                  # HTTP client (350 lines)
+    │   └── websocket.ts            # Real-time comm (550 lines)
+    │
+    ├── types/                      # TypeScript Definitions
+    │   └── simulation.ts           # Type system (624 lines)
+    │
+    ├── utils/                      # Utilities
+    │   └── validation.ts           # Validation logic (450 lines)
+    │
+    └── styles/                     # Styling
+        └── App.css                 # Main stylesheet (1000+ lines)
+
+Total: 22 files, 6,142 lines of code
