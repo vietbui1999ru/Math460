@@ -626,17 +626,6 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
           </div>
         )}
       </Section>
-
-      {/* Apply Button */}
-      <div className="panel-footer">
-        <button
-          className="btn-apply"
-          onClick={onApply}
-          disabled={validationErrors.length > 0}
-        >
-          Apply Configuration
-        </button>
-      </div>
     </div>
   );
 };

@@ -464,13 +464,25 @@ export const App: React.FC = () => {
             />
           </div>
 
-          <div className="sidebar-section">
+          <div className="sidebar-section sidebar-parameters">
             <ParameterPanel
               config={config}
               onChange={setConfig}
               onApply={handleApplyConfiguration}
               showValidation={true}
             />
+          </div>
+
+          {/* Fixed Apply Configuration Button */}
+          <div className="sidebar-apply-button">
+            <button
+              className="btn-apply-fixed"
+              onClick={handleApplyConfiguration}
+              disabled={validationErrors.length > 0}
+              title={validationErrors.length > 0 ? 'Fix validation errors before applying' : 'Apply configuration and solve'}
+            >
+              Apply Configuration
+            </button>
           </div>
         </aside>
 
