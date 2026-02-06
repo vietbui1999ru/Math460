@@ -8,6 +8,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import VisualizationCanvas, { VisualizationMode } from './VisualizationCanvas';
+import Trajectory3DVisualization from './Trajectory3DVisualization';
 import { SimulationData, EquationType } from '../types/simulation';
 
 /**
@@ -248,10 +249,17 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
         <div className="draggable-panel-content">
           {/* Handle different 3D visualization types */}
           {panel.mode === VisualizationMode.SURFACE_3D && panel.visualizationType === 'trajectory' ? (
-            // Import Trajectory3DVisualization when available
-            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0' }}>
-              <p>3D Trajectory: Connect points sequentially showing temporal evolution</p>
-            </div>
+            <Trajectory3DVisualization
+              allData={allData}
+              equationType={equationType}
+              globalMin={globalMin}
+              globalMax={globalMax}
+              height="100%"
+              colorScheme={colorScheme}
+              showGrid={showGrid}
+              title={panel.title}
+              samplingRate={allData.length > 50 ? 2 : 1}
+            />
           ) : (
             <VisualizationCanvas
               currentData={currentData}
