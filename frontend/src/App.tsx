@@ -21,6 +21,8 @@ import { solveSimulation, validateConfiguration } from './services/api';
 import ParameterPanel from './components/ParameterPanel';
 import VisualizationCanvas, { VisualizationMode } from './components/VisualizationCanvas';
 import GridVisualization from './components/GridVisualization';
+import DraggableGridVisualization from './components/DraggableGridVisualization';
+import Enhanced3DViewer from './components/Enhanced3DViewer';
 import SimulationControls from './components/SimulationControls';
 import PresetSelector from './components/PresetSelector';
 import PerformanceOverlay from './components/PerformanceOverlay';
@@ -114,6 +116,9 @@ export const App: React.FC = () => {
 
   /** Visualization mode */
   const [vizMode, setVizMode] = useState<VisualizationMode>(VisualizationMode.LINE_2D);
+
+  /** Grid layout mode: static vs draggable */
+  const [gridLayoutMode, setGridLayoutMode] = useState<'static' | 'draggable'>('static');
 
   /** Playback speed multiplier (1.0 = 50 fps baseline) */
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
@@ -488,7 +493,7 @@ export const App: React.FC = () => {
               onClick={() => handleVisualizationModeChange(VisualizationMode.SURFACE_3D)}
               disabled={allData.length < 2}
             >
-              3D Surface
+              3D Surface (Enhanced)
             </button>
             <button
               className={`viz-mode-btn ${vizMode === VisualizationMode.HEATMAP ? 'active' : ''}`}
@@ -506,26 +511,71 @@ export const App: React.FC = () => {
             </button>
             <button
               className={`viz-mode-btn ${vizMode === VisualizationMode.GRID ? 'active' : ''}`}
-              onClick={() => handleVisualizationModeChange(VisualizationMode.GRID)}
+              onClick={() => {
+                handleVisualizationModeChange(VisualizationMode.GRID);
+                setGridLayoutMode('static');
+              }}
               disabled={!currentData}
+              title="Static 2x2 grid layout"
             >
-              2x2 Grid
+              2x2 Grid (Static)
+            </button>
+            <button
+              className={`viz-mode-btn ${vizMode === VisualizationMode.GRID && gridLayoutMode === 'draggable' ? 'active' : ''}`}
+              onClick={() => {
+                handleVisualizationModeChange(VisualizationMode.GRID);
+                setGridLayoutMode('draggable');
+              }}
+              disabled={!currentData}
+              title="Interactive draggable grid - drag panels to rearrange"
+            >
+              2x2 Grid (Draggable)
             </button>
           </div>
 
           {/* Visualization */}
           <div className={`visualization-container ${vizMode === VisualizationMode.GRID ? 'grid-mode' : ''}`}>
-            {vizMode === VisualizationMode.GRID ? (
-              <GridVisualization
+            {vizMode === VisualizationMode.SURFACE_3D ? (
+              // Enhanced 3D Viewer with complete/partial toggle
+              <Enhanced3DViewer
                 currentData={currentData}
                 allData={allData}
+                currentTimeIndex={currentTimeIndex}
+                totalTimeSteps={totalTimeSteps}
                 equationType={config.equation_type}
                 globalMin={completeSolution?.metadata.global_min}
                 globalMax={completeSolution?.metadata.global_max}
                 useFixedAxes={true}
                 showGrid={true}
+                partialTimeSliceSize={Math.min(15, Math.floor(totalTimeSteps / 10))}
               />
+            ) : vizMode === VisualizationMode.GRID ? (
+              // Grid visualization - static or draggable
+              gridLayoutMode === 'draggable' ? (
+                <DraggableGridVisualization
+                  currentData={currentData}
+                  allData={allData}
+                  equationType={config.equation_type}
+                  globalMin={completeSolution?.metadata.global_min}
+                  globalMax={completeSolution?.metadata.global_max}
+                  useFixedAxes={true}
+                  showGrid={true}
+                  currentTimeIndex={currentTimeIndex}
+                  totalTimeSteps={totalTimeSteps}
+                />
+              ) : (
+                <GridVisualization
+                  currentData={currentData}
+                  allData={allData}
+                  equationType={config.equation_type}
+                  globalMin={completeSolution?.metadata.global_min}
+                  globalMax={completeSolution?.metadata.global_max}
+                  useFixedAxes={true}
+                  showGrid={true}
+                />
+              )
             ) : (
+              // Standard single visualization
               <VisualizationCanvas
                 currentData={currentData}
                 allData={allData}
