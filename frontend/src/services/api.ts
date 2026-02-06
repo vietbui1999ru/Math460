@@ -12,7 +12,8 @@ import {
   ValidationResult,
   SimulationInfo,
   SimulationPreset,
-  ApiResponse
+  ApiResponse,
+  CompleteSolution
 } from '../types/simulation';
 
 /**
@@ -125,6 +126,27 @@ export async function createSimulation(
     };
   } catch (error) {
     return handleApiError(error, 'Failed to create simulation');
+  }
+}
+
+/**
+ * Solves a complete simulation and returns all data
+ * Computes the full solution and returns it for client-side playback
+ *
+ * @param config - The simulation configuration
+ * @returns Promise resolving to complete solution with all data
+ */
+export async function solveSimulation(
+  config: SimulationConfig
+): Promise<ApiResponse<CompleteSolution>> {
+  try {
+    const response = await apiClient.post('/api/simulations/solve', config);
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    return handleApiError(error, 'Failed to solve simulation');
   }
 }
 

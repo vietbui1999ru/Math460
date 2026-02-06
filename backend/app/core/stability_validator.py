@@ -32,8 +32,29 @@ class StabilityValidator:
         Returns:
             Validation result dictionary
         """
-        # TODO: Implement heat equation validation
-        pass
+        errors = []
+
+        # Check parameter validity
+        if beta <= 0:
+            errors.append("beta (thermal diffusivity) must be positive")
+        if dt <= 0:
+            errors.append("dt (time step) must be positive")
+        if dx <= 0:
+            errors.append("dx (spatial step) must be positive")
+
+        # Calculate stability parameter
+        sigma = beta * dt / (dx ** 2) if dx > 0 else float('inf')
+
+        # Check CFL condition
+        if sigma >= 0.5:
+            errors.append(f"CFL condition violated: σ = {sigma:.4f} >= 0.5. Reduce dt or increase dx.")
+
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "sigma": sigma,
+            "message": "Configuration is stable" if len(errors) == 0 else "Configuration is unstable"
+        }
 
     def validate_wave_equation(
         self,
@@ -53,8 +74,29 @@ class StabilityValidator:
         Returns:
             Validation result dictionary
         """
-        # TODO: Implement wave equation validation
-        pass
+        errors = []
+
+        # Check parameter validity
+        if c <= 0:
+            errors.append("c (wave speed) must be positive")
+        if dt <= 0:
+            errors.append("dt (time step) must be positive")
+        if dx <= 0:
+            errors.append("dx (spatial step) must be positive")
+
+        # Calculate stability parameter
+        sigma = (c * dt / dx) ** 2 if dx > 0 else float('inf')
+
+        # Check CFL condition
+        if sigma > 1.0:
+            errors.append(f"CFL condition violated: σ = {sigma:.4f} > 1.0. Reduce dt or increase dx.")
+
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "sigma": sigma,
+            "message": "Configuration is stable" if len(errors) == 0 else "Configuration is unstable"
+        }
 
     def check_parameter_ranges(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -66,5 +108,23 @@ class StabilityValidator:
         Returns:
             Validation result dictionary
         """
-        # TODO: Implement parameter range checking
-        pass
+        errors = []
+
+        # Check spatial discretization (handle both old and new field names)
+        spatial = config.get("spatial_domain") or config.get("spatial", {})
+        if spatial.get("dx", 0) <= 0:
+            errors.append("dx must be positive")
+        if spatial.get("x_max", 0) <= spatial.get("x_min", 0):
+            errors.append("x_max must be greater than x_min")
+
+        # Check temporal discretization (handle both old and new field names)
+        temporal = config.get("temporal_domain") or config.get("temporal", {})
+        if temporal.get("dt", 0) <= 0:
+            errors.append("dt must be positive")
+        if temporal.get("t_max", 0) <= temporal.get("t_min", 0):
+            errors.append("t_max must be greater than t_min")
+
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors
+        }

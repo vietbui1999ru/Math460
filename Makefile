@@ -25,7 +25,7 @@ install:
 dev:
 	@echo "Starting development servers..."
 	@echo "Backend: http://localhost:8000"
-	@echo "Frontend: http://localhost:3000"
+	@echo "Frontend: http://localhost:5743"
 	@echo ""
 	@make -j2 dev-backend dev-frontend
 

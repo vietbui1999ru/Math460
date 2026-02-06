@@ -384,6 +384,54 @@ export interface PlotConfig {
 }
 
 /**
+ * Solution metadata for complete solution response
+ * Contains computed bounds and dimensional info
+ */
+export interface SolutionMetadata {
+  /** Global minimum value across entire solution */
+  global_min: number;
+
+  /** Global maximum value across entire solution */
+  global_max: number;
+
+  /** Number of spatial points */
+  nx: number;
+
+  /** Number of time steps */
+  nt: number;
+
+  /** Computation time in milliseconds */
+  computation_time_ms: number;
+
+  /** Stability parameter (σ) */
+  stability_parameter: number;
+}
+
+/**
+ * Complete solution response
+ * Contains full pre-computed solution for client-side playback
+ */
+export interface CompleteSolution {
+  /** Unique identifier for the simulation */
+  simulation_id: string;
+
+  /** Configuration used to generate solution */
+  config: SimulationConfig;
+
+  /** Array of spatial coordinates (length: nx) */
+  x_values: number[];
+
+  /** Array of time values (length: nt) */
+  t_values: number[];
+
+  /** 2D array of solution values [nt][nx] */
+  u_values: number[][];
+
+  /** Metadata about the solution */
+  metadata: SolutionMetadata;
+}
+
+/**
  * Application state
  * Global state management for the application
  */

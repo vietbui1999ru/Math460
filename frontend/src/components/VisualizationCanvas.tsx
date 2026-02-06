@@ -9,6 +9,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Plotly from 'plotly.js-dist-min';
 import { SimulationData, EquationType } from '../types/simulation';
+import {
+  DEFAULT_OPTIMIZATION_CONFIG,
+  getOptimizedPlotlyConfig,
+  getOptimizedLayout,
+  getRecommendedPreset,
+  selectOptimalRenderMode
+} from '../utils/visualizationOptimizations';
+import { PerformanceMonitor } from '../utils/performanceMonitor';
 
 /**
  * Visualization mode types
@@ -21,7 +29,13 @@ export enum VisualizationMode {
   SURFACE_3D = '3d',
 
   /** Heatmap showing u(x,t) */
-  HEATMAP = 'heatmap'
+  HEATMAP = 'heatmap',
+
+  /** Heatmap strip animation showing spatial distribution over time */
+  HEATMAP_STRIP = 'heatmap_strip',
+
+  /** 2x2 grid showing all four visualization modes simultaneously */
+  GRID = 'grid'
 }
 
 /**
@@ -63,6 +77,15 @@ interface VisualizationCanvasProps {
 
   /** Height of the visualization */
   height?: string | number;
+
+  /** Global minimum value for fixed axis scaling */
+  globalMin?: number;
+
+  /** Global maximum value for fixed axis scaling */
+  globalMax?: number;
+
+  /** Whether to use fixed axis ranges (prevents jumping) */
+  useFixedAxes?: boolean;
 }
 
 /**
@@ -101,13 +124,27 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
   colorScheme = 'Viridis',
   showGrid = true,
   className = '',
-  height = '500px'
+  height = '500px',
+  globalMin,
+  globalMax,
+  useFixedAxes = false
 }) => {
   // Reference to the div that will contain the plot
   const plotContainerRef = useRef<HTMLDivElement>(null);
 
   // Track if plot has been initialized
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // GPU acceleration and optimization config
+  const optimizationConfigRef = useRef(getRecommendedPreset());
+  const performanceMonitorRef = useRef(PerformanceMonitor.getInstance());
+
+  // Enable performance monitoring in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      performanceMonitorRef.current.enable();
+    }
+  }, []);
 
   /**
    * Initializes or updates the plot when data or mode changes
@@ -124,6 +161,8 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       render3DPlot();
     } else if (mode === VisualizationMode.HEATMAP) {
       renderHeatmap();
+    } else if (mode === VisualizationMode.HEATMAP_STRIP) {
+      renderHeatmapStrip();
     }
 
     setIsInitialized(true);
@@ -134,7 +173,7 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
         Plotly.purge(plotContainerRef.current);
       }
     };
-  }, [currentData, allData, mode, equationType]);
+  }, [currentData, allData, mode, equationType, globalMin, globalMax, useFixedAxes]);
 
   /**
    * Renders a 2D line plot showing u(x) at the current time step
@@ -143,6 +182,8 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
     if (!plotContainerRef.current || !currentData) {
       return;
     }
+
+    performanceMonitorRef.current.startFrame();
 
     // Prepare data for Plotly
     const trace: Partial<Plotly.PlotData> = {
@@ -161,8 +202,15 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       }
     };
 
-    // Layout configuration
-    const layout: Partial<Plotly.Layout> = {
+    // Calculate fixed axis range with padding if enabled
+    let yaxisRange: [number, number] | undefined;
+    if (useFixedAxes && globalMin !== undefined && globalMax !== undefined) {
+      const padding = (globalMax - globalMin) * 0.1;
+      yaxisRange = [globalMin - padding, globalMax + padding];
+    }
+
+    // Layout configuration with GPU optimizations
+    const baseLayout: Partial<Plotly.Layout> = {
       title: {
         text: title || `${equationType.toUpperCase()} Equation Solution (2D)`,
         font: { color: '#e0e0e0', size: 18 }
@@ -175,7 +223,8 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       yaxis: {
         title: yLabel,
         gridcolor: showGrid ? '#333' : 'transparent',
-        color: '#e0e0e0'
+        color: '#e0e0e0',
+        range: yaxisRange
       },
       paper_bgcolor: '#1a1a1a',
       plot_bgcolor: '#1a1a1a',
@@ -184,13 +233,12 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       hovermode: 'closest'
     };
 
-    // Configuration options
-    const config: Partial<Plotly.Config> = {
-      responsive: true,
-      displayModeBar: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ['select2d', 'lasso2d']
-    };
+    const layout = getOptimizedLayout(baseLayout, optimizationConfigRef.current);
+
+    // Configuration options with GPU acceleration
+    const config = getOptimizedPlotlyConfig(optimizationConfigRef.current);
+
+    performanceMonitorRef.current.endRender();
 
     // Create or update the plot
     if (isInitialized) {
@@ -198,15 +246,20 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
     } else {
       Plotly.newPlot(plotContainerRef.current, [trace], layout, config);
     }
+
+    performanceMonitorRef.current.endFrame();
   };
 
   /**
    * Renders a 3D surface plot showing u(x,t) for all time steps
+   * Uses WebGL (GPU) rendering automatically for optimal performance
    */
   const render3DPlot = () => {
     if (!plotContainerRef.current || allData.length === 0) {
       return;
     }
+
+    performanceMonitorRef.current.startFrame();
 
     // Build z-matrix (u values over x and t)
     const zMatrix: number[][] = [];
@@ -219,6 +272,7 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
     });
 
     // Prepare data for Plotly
+    // 3D surface plots in Plotly.js are automatically WebGL-rendered for GPU acceleration
     const trace: Partial<Plotly.PlotData> = {
       x: xValues,
       y: tValues,
@@ -233,8 +287,8 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       }
     };
 
-    // Layout configuration
-    const layout: Partial<Plotly.Layout> = {
+    // Layout configuration with GPU optimizations
+    const baseLayout: Partial<Plotly.Layout> = {
       title: {
         text: title || `${equationType.toUpperCase()} Equation Solution (3D)`,
         font: { color: '#e0e0e0', size: 18 }
@@ -266,12 +320,12 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       margin: { l: 0, r: 0, t: 60, b: 0 }
     };
 
-    // Configuration options
-    const config: Partial<Plotly.Config> = {
-      responsive: true,
-      displayModeBar: true,
-      displaylogo: false
-    };
+    const layout = getOptimizedLayout(baseLayout, optimizationConfigRef.current);
+
+    // Configuration options with GPU acceleration
+    const config = getOptimizedPlotlyConfig(optimizationConfigRef.current);
+
+    performanceMonitorRef.current.endRender();
 
     // Create or update the plot
     if (isInitialized) {
@@ -279,15 +333,20 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
     } else {
       Plotly.newPlot(plotContainerRef.current, [trace], layout, config);
     }
+
+    performanceMonitorRef.current.endFrame();
   };
 
   /**
    * Renders a heatmap showing u(x,t)
+   * Uses WebGL acceleration (heatmapgl) for large datasets when enabled
    */
   const renderHeatmap = () => {
     if (!plotContainerRef.current || allData.length === 0) {
       return;
     }
+
+    performanceMonitorRef.current.startFrame();
 
     // Build z-matrix (u values over x and t)
     const zMatrix: number[][] = [];
@@ -299,12 +358,15 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       zMatrix.push(dataPoint.u_values);
     });
 
+    // Use heatmapgl (WebGL accelerated) for better performance when enabled
+    const traceType = optimizationConfigRef.current.heatmapGLMode ? 'heatmapgl' : 'heatmap';
+
     // Prepare data for Plotly
     const trace: Partial<Plotly.PlotData> = {
       x: xValues,
       y: tValues,
       z: zMatrix,
-      type: 'heatmap',
+      type: traceType as any,
       colorscale: colorScheme,
       showscale: true,
       colorbar: {
@@ -314,8 +376,8 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       }
     };
 
-    // Layout configuration
-    const layout: Partial<Plotly.Layout> = {
+    // Layout configuration with GPU optimizations
+    const baseLayout: Partial<Plotly.Layout> = {
       title: {
         text: title || `${equationType.toUpperCase()} Equation Solution (Heatmap)`,
         font: { color: '#e0e0e0', size: 18 }
@@ -336,12 +398,12 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
       margin: { l: 60, r: 40, t: 60, b: 60 }
     };
 
-    // Configuration options
-    const config: Partial<Plotly.Config> = {
-      responsive: true,
-      displayModeBar: true,
-      displaylogo: false
-    };
+    const layout = getOptimizedLayout(baseLayout, optimizationConfigRef.current);
+
+    // Configuration options with GPU acceleration
+    const config = getOptimizedPlotlyConfig(optimizationConfigRef.current);
+
+    performanceMonitorRef.current.endRender();
 
     // Create or update the plot
     if (isInitialized) {
@@ -349,6 +411,83 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
     } else {
       Plotly.newPlot(plotContainerRef.current, [trace], layout, config);
     }
+
+    performanceMonitorRef.current.endFrame();
+  };
+
+  /**
+   * Renders an animated heatmap strip showing spatial temperature distribution
+   * as a colored horizontal strip that updates over time
+   * Uses WebGL acceleration (heatmapgl) when enabled
+   */
+  const renderHeatmapStrip = () => {
+    if (!plotContainerRef.current || !currentData) {
+      return;
+    }
+
+    performanceMonitorRef.current.startFrame();
+
+    // Create matrix with 5 rows showing same data for visual thickness
+    const stripRows = 5;
+    const stripMatrix = Array(stripRows).fill(currentData.u_values);
+
+    // Use heatmapgl (WebGL accelerated) for better performance
+    const traceType = optimizationConfigRef.current.heatmapGLMode ? 'heatmapgl' : 'heatmap';
+
+    // Prepare data for Plotly
+    const trace: Partial<Plotly.PlotData> = {
+      x: currentData.x_values,
+      y: Array.from({ length: stripRows }, (_, i) => i), // [0, 1, 2, 3, 4]
+      z: stripMatrix,
+      type: traceType as any,
+      colorscale: colorScheme,
+      zmin: globalMin, // Fixed color scale prevents color shifting
+      zmax: globalMax,
+      showscale: true,
+      colorbar: {
+        title: { text: yLabel, side: 'right' },
+        tickfont: { color: '#e0e0e0' },
+        titlefont: { color: '#e0e0e0' }
+      }
+    };
+
+    // Layout configuration with GPU optimizations
+    const baseLayout: Partial<Plotly.Layout> = {
+      title: {
+        text: `${equationType.toUpperCase()} - Strip Animation (t = ${currentData.time_value.toFixed(4)})`,
+        font: { color: '#e0e0e0', size: 18 }
+      },
+      xaxis: {
+        title: xLabel,
+        gridcolor: showGrid ? '#333' : 'transparent',
+        color: '#e0e0e0'
+      },
+      yaxis: {
+        visible: false,
+        showticklabels: false
+      },
+      paper_bgcolor: '#1a1a1a',
+      plot_bgcolor: '#1a1a1a',
+      font: { color: '#e0e0e0' },
+      margin: { l: 60, r: 120, t: 60, b: 60 },
+      height: 250
+    };
+
+    const layout = getOptimizedLayout(baseLayout, optimizationConfigRef.current);
+
+    // Configuration options with GPU acceleration
+    const config = getOptimizedPlotlyConfig(optimizationConfigRef.current);
+
+    performanceMonitorRef.current.endRender();
+
+    // Create or update the plot
+    if (isInitialized) {
+      Plotly.react(plotContainerRef.current, [trace], layout, config);
+    } else {
+      Plotly.newPlot(plotContainerRef.current, [trace], layout, config);
+    }
+
+    performanceMonitorRef.current.endFrame();
   };
 
   /**
@@ -374,6 +513,20 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
         <div className="visualization-empty">
           <p>Insufficient data for {mode === VisualizationMode.SURFACE_3D ? '3D' : 'heatmap'} visualization</p>
           <p className="visualization-hint">Run simulation to collect more time steps</p>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Renders strip animation mode empty state when no current data
+   */
+  if (mode === VisualizationMode.HEATMAP_STRIP && !currentData) {
+    return (
+      <div className={`visualization-canvas ${className}`} style={{ height }}>
+        <div className="visualization-empty">
+          <p>No data available for strip animation</p>
+          <p className="visualization-hint">Run simulation to generate solution</p>
         </div>
       </div>
     );

@@ -6,10 +6,9 @@ from typing import Dict
 import json
 import asyncio
 
-from app.services.simulation_service import SimulationService
+from app.services import simulation_service
 
 router = APIRouter()
-simulation_service = SimulationService()
 
 # Track active WebSocket connections
 active_connections: Dict[str, WebSocket] = {}
@@ -41,22 +40,55 @@ async def simulation_websocket(websocket: WebSocket, simulation_id: str):
             message = json.loads(data)
 
             if message.get("command") == "start":
-                # TODO: Start simulation and stream results
+                # Check if simulation exists
+                if simulation_id not in simulation_service.active_simulations:
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": f"Simulation {simulation_id} not found"
+                    })
+                    break
+
+                # Start simulation and stream results
                 await websocket.send_json({
                     "type": "status",
                     "status": "running",
                     "message": "Simulation started"
                 })
                 # Stream simulation data
-                # for time_step in simulation_service.run_simulation(simulation_id):
-                #     await websocket.send_json(time_step)
+                async for data in simulation_service.run_simulation(simulation_id):
+                    await websocket.send_json({
+                        "type": "data",
+                        "data": data
+                    })
+
+                # Send completion message
+                await websocket.send_json({
+                    "type": "completed",
+                    "simulation_id": simulation_id,
+                    "message": "Simulation completed"
+                })
 
             elif message.get("command") == "pause":
-                # TODO: Pause simulation
-                pass
+                # Pause simulation
+                simulation_service.pause_simulation(simulation_id)
+                await websocket.send_json({
+                    "type": "status",
+                    "status": "paused",
+                    "message": "Simulation paused"
+                })
+
+            elif message.get("command") == "resume":
+                # Resume simulation
+                simulation_service.resume_simulation(simulation_id)
+                await websocket.send_json({
+                    "type": "status",
+                    "status": "running",
+                    "message": "Simulation resumed"
+                })
 
             elif message.get("command") == "stop":
-                # TODO: Stop simulation
+                # Stop simulation
+                simulation_service.stop_simulation(simulation_id)
                 break
 
     except WebSocketDisconnect:
