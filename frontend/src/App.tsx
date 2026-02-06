@@ -119,6 +119,9 @@ export const App: React.FC = () => {
   /** Playback speed multiplier (1.0 = 50 fps baseline) */
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
 
+  /** Whether there are validation errors in parameter panel */
+  const [hasValidationErrors, setHasValidationErrors] = useState<boolean>(false);
+
   /** Reference to animation frame ID for cleanup */
   const animationFrameRef = useRef<number | null>(null);
 
@@ -470,6 +473,7 @@ export const App: React.FC = () => {
               onChange={setConfig}
               onApply={handleApplyConfiguration}
               showValidation={true}
+              onValidationChange={setHasValidationErrors}
             />
           </div>
 
@@ -478,8 +482,8 @@ export const App: React.FC = () => {
             <button
               className="btn-apply-fixed"
               onClick={handleApplyConfiguration}
-              disabled={validationErrors.length > 0}
-              title={validationErrors.length > 0 ? 'Fix validation errors before applying' : 'Apply configuration and solve'}
+              disabled={hasValidationErrors}
+              title={hasValidationErrors ? 'Fix validation errors before applying' : 'Apply configuration and solve'}
             >
               Apply Configuration
             </button>

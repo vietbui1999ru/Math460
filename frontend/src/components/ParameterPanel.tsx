@@ -53,6 +53,9 @@ interface ParameterPanelProps {
   /** Whether to show validation errors */
   showValidation?: boolean;
 
+  /** Callback to report validation errors to parent */
+  onValidationChange?: (hasErrors: boolean) => void;
+
   /** Custom CSS class name */
   className?: string;
 }
@@ -78,6 +81,7 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   onChange,
   onApply,
   showValidation = true,
+  onValidationChange,
   className = ''
 }) => {
   // Validation state
@@ -96,11 +100,17 @@ export const ParameterPanel: React.FC<ParameterPanelProps> = ({
   useEffect(() => {
     if (showValidation) {
       const result = validateSimulationConfig(config);
-      setValidationErrors(result.errors || []);
+      const errors = result.errors || [];
+      setValidationErrors(errors);
       setValidationWarnings(result.warnings || []);
       setStabilityParameter(result.stability_parameter);
+
+      // Notify parent component of validation status
+      if (onValidationChange) {
+        onValidationChange(errors.length > 0);
+      }
     }
-  }, [config, showValidation]);
+  }, [config, showValidation, onValidationChange]);
 
   /**
    * Toggles section expansion
