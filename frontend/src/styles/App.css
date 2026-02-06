@@ -155,38 +155,43 @@ textarea {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .app-content {
   flex: 1;
   display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: var(--spacing-md);
-  padding: var(--spacing-lg);
-  max-width: 1920px;
-  margin: 0 auto;
+  grid-template-columns: 320px 1fr;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  max-width: 100%;
+  margin: 0;
   width: 100%;
+  overflow: hidden;
 }
 
 .sidebar-left {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   overflow-y: auto;
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 80px);
+  padding: 0 var(--spacing-xs);
 }
 
 .sidebar-section {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  flex-shrink: 0;
 }
 
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  overflow: hidden;
 }
 
 /* ============================================================
@@ -195,19 +200,20 @@ textarea {
 
 .app-header {
   background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
-  border-bottom: 2px solid var(--color-border);
-  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-md) var(--spacing-lg);
   text-align: center;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: var(--z-header);
+  min-height: auto;
 }
 
 .app-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: var(--spacing-xs);
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 2px;
   background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -215,18 +221,20 @@ textarea {
 }
 
 .app-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
   margin: 0;
+  display: none;
 }
 
 .app-footer {
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: var(--spacing-xs) var(--spacing-md);
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   color: var(--color-text-secondary);
+  flex-shrink: 0;
 }
 
 /* ============================================================
@@ -476,23 +484,25 @@ textarea {
 
 .viz-mode-selector {
   display: flex;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
+  gap: 2px;
+  padding: var(--spacing-xs);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
 }
 
 .viz-mode-btn {
-  flex: 1;
-  padding: var(--spacing-sm) var(--spacing-md);
+  flex: 0 0 auto;
+  padding: 4px 8px;
   background: var(--color-bg-tertiary);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
   font-weight: 500;
   transition: all var(--transition-fast);
+  white-space: nowrap;
 }
 
 .viz-mode-btn:hover:not(:disabled) {
@@ -509,9 +519,11 @@ textarea {
 .visualization-container {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-md);
-  min-height: 500px;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .visualization-container.grid-mode {
@@ -556,11 +568,12 @@ textarea {
 .simulation-controls {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  font-size: 0.85rem;
 }
 
 .controls-status {
@@ -911,12 +924,14 @@ textarea {
 
 .info-panel {
   display: flex;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-md);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   flex-wrap: wrap;
+  font-size: 0.8rem;
+  flex-shrink: 0;
 }
 
 /* ============================================================
@@ -1334,15 +1349,15 @@ textarea {
   margin: 0;
 }
 
-/* Draggable Grid Container */
-.draggable-grid-container {
+/* Draggable Grid Container (3x2 grid = 3 columns, 2 rows) */
+.draggable-grid-container-3x2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
   width: 100%;
   height: 100%;
-  min-height: 1000px;
+  min-height: 800px;
 }
 
 /* Draggable Panels */
@@ -1427,24 +1442,34 @@ textarea {
   font-size: 1rem;
 }
 
-/* Grid Position Classes */
-.grid-panel-tl {
+/* Grid Position Classes (3x2 layout) */
+.grid-panel-r1c1 {
   grid-column: 1;
   grid-row: 1;
 }
 
-.grid-panel-tr {
+.grid-panel-r1c2 {
   grid-column: 2;
   grid-row: 1;
 }
 
-.grid-panel-bl {
+.grid-panel-r1c3 {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.grid-panel-r2c1 {
   grid-column: 1;
   grid-row: 2;
 }
 
-.grid-panel-br {
+.grid-panel-r2c2 {
   grid-column: 2;
+  grid-row: 2;
+}
+
+.grid-panel-r2c3 {
+  grid-column: 3;
   grid-row: 2;
 }
 
@@ -1605,10 +1630,30 @@ textarea {
    17. RESPONSIVE DRAGGABLE & ENHANCED 3D
    ============================================================ */
 
+@media (max-width: 1600px) {
+  .draggable-grid-container-3x2 {
+    gap: var(--spacing-sm);
+    min-height: 700px;
+  }
+
+  .draggable-panel-title {
+    font-size: 0.85rem;
+  }
+}
+
 @media (max-width: 1400px) {
-  .draggable-grid-container {
+  .draggable-grid-container-3x2 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
     min-height: 900px;
   }
+
+  .grid-panel-r1c1 { grid-column: 1; grid-row: 1; }
+  .grid-panel-r1c2 { grid-column: 2; grid-row: 1; }
+  .grid-panel-r1c3 { grid-column: 1; grid-row: 2; }
+  .grid-panel-r2c1 { grid-column: 2; grid-row: 2; }
+  .grid-panel-r2c2 { grid-column: 1; grid-row: 3; }
+  .grid-panel-r2c3 { grid-column: 2; grid-row: 3; }
 
   .enhanced-3d-header {
     flex-direction: column;
@@ -1624,8 +1669,25 @@ textarea {
 }
 
 @media (max-width: 1200px) {
-  .draggable-grid-container {
-    min-height: 800px;
+  .draggable-grid-container-3x2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    min-height: auto;
+    gap: var(--spacing-sm);
+  }
+
+  .draggable-grid-panel {
+    min-height: 350px;
+  }
+
+  .grid-panel-r1c1,
+  .grid-panel-r1c2,
+  .grid-panel-r1c3,
+  .grid-panel-r2c1,
+  .grid-panel-r2c2,
+  .grid-panel-r2c3 {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .mode-toggle-group {
@@ -1633,23 +1695,13 @@ textarea {
   }
 }
 
-@media (max-width: 992px) {
-  .draggable-grid-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    min-height: auto;
-  }
-
+@media (max-width: 768px) {
   .draggable-grid-panel {
-    min-height: 450px;
+    min-height: 300px;
   }
 
-  .grid-panel-tl,
-  .grid-panel-tr,
-  .grid-panel-bl,
-  .grid-panel-br {
-    grid-column: 1;
-    grid-row: auto;
+  .draggable-grid-container-3x2 {
+    gap: var(--spacing-xs);
   }
 }
 

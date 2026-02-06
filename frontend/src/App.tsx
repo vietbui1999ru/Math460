@@ -20,7 +20,6 @@ import {
 import { solveSimulation, validateConfiguration } from './services/api';
 import ParameterPanel from './components/ParameterPanel';
 import VisualizationCanvas, { VisualizationMode } from './components/VisualizationCanvas';
-import GridVisualization from './components/GridVisualization';
 import DraggableGridVisualization from './components/DraggableGridVisualization';
 import Enhanced3DViewer from './components/Enhanced3DViewer';
 import SimulationControls from './components/SimulationControls';
@@ -116,9 +115,6 @@ export const App: React.FC = () => {
 
   /** Visualization mode */
   const [vizMode, setVizMode] = useState<VisualizationMode>(VisualizationMode.LINE_2D);
-
-  /** Grid layout mode: static vs draggable */
-  const [gridLayoutMode, setGridLayoutMode] = useState<'static' | 'draggable'>('static');
 
   /** Playback speed multiplier (1.0 = 50 fps baseline) */
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
@@ -511,25 +507,11 @@ export const App: React.FC = () => {
             </button>
             <button
               className={`viz-mode-btn ${vizMode === VisualizationMode.GRID ? 'active' : ''}`}
-              onClick={() => {
-                handleVisualizationModeChange(VisualizationMode.GRID);
-                setGridLayoutMode('static');
-              }}
+              onClick={() => handleVisualizationModeChange(VisualizationMode.GRID)}
               disabled={!currentData}
-              title="Static 2x2 grid layout"
+              title="Interactive 3x2 grid - drag panels to rearrange • 6 visualization types"
             >
-              2x2 Grid (Static)
-            </button>
-            <button
-              className={`viz-mode-btn ${vizMode === VisualizationMode.GRID && gridLayoutMode === 'draggable' ? 'active' : ''}`}
-              onClick={() => {
-                handleVisualizationModeChange(VisualizationMode.GRID);
-                setGridLayoutMode('draggable');
-              }}
-              disabled={!currentData}
-              title="Interactive draggable grid - drag panels to rearrange"
-            >
-              2x2 Grid (Draggable)
+              📊 3x2 Grid (Interactive)
             </button>
           </div>
 
@@ -550,30 +532,18 @@ export const App: React.FC = () => {
                 partialTimeSliceSize={Math.min(15, Math.floor(totalTimeSteps / 10))}
               />
             ) : vizMode === VisualizationMode.GRID ? (
-              // Grid visualization - static or draggable
-              gridLayoutMode === 'draggable' ? (
-                <DraggableGridVisualization
-                  currentData={currentData}
-                  allData={allData}
-                  equationType={config.equation_type}
-                  globalMin={completeSolution?.metadata.global_min}
-                  globalMax={completeSolution?.metadata.global_max}
-                  useFixedAxes={true}
-                  showGrid={true}
-                  currentTimeIndex={currentTimeIndex}
-                  totalTimeSteps={totalTimeSteps}
-                />
-              ) : (
-                <GridVisualization
-                  currentData={currentData}
-                  allData={allData}
-                  equationType={config.equation_type}
-                  globalMin={completeSolution?.metadata.global_min}
-                  globalMax={completeSolution?.metadata.global_max}
-                  useFixedAxes={true}
-                  showGrid={true}
-                />
-              )
+              // Interactive 3x2 Grid Visualization
+              <DraggableGridVisualization
+                currentData={currentData}
+                allData={allData}
+                equationType={config.equation_type}
+                globalMin={completeSolution?.metadata.global_min}
+                globalMax={completeSolution?.metadata.global_max}
+                useFixedAxes={true}
+                showGrid={true}
+                currentTimeIndex={currentTimeIndex}
+                totalTimeSteps={totalTimeSteps}
+              />
             ) : (
               // Standard single visualization
               <VisualizationCanvas

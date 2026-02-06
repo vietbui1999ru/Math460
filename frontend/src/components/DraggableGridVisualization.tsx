@@ -11,14 +11,15 @@ import VisualizationCanvas, { VisualizationMode } from './VisualizationCanvas';
 import { SimulationData, EquationType } from '../types/simulation';
 
 /**
- * Visualization panel types and positions
+ * Visualization panel types and positions (3x2 grid)
  */
-type PanelPosition = 'tl' | 'tr' | 'bl' | 'br'; // top-left, top-right, bottom-left, bottom-right
+type PanelPosition = 'r1c1' | 'r1c2' | 'r1c3' | 'r2c1' | 'r2c2' | 'r2c3'; // row-col notation
 
 interface VisualizationPanel {
   id: string;
   position: PanelPosition;
   mode: VisualizationMode;
+  visualizationType?: 'complete' | 'partial' | 'trajectory'; // For 3D variants
   title: string;
   isDragging: boolean;
   dragOffset: { x: number; y: number };
@@ -38,38 +39,66 @@ interface DraggableGridVisualizationProps {
 }
 
 /**
- * Default visualization panels configuration
+ * Default visualization panels configuration (3x2 grid = 6 panels)
+ * Layout:
+ *   Row 1: [2D Line Plot] [3D Partial] [Strip Animation]
+ *   Row 2: [Heatmap] [3D Final] [3D Trajectory]
  */
 const DEFAULT_PANELS: VisualizationPanel[] = [
+  // Row 1: Column 1 - 2D Line Plot
   {
     id: 'panel-2d',
-    position: 'tl',
+    position: 'r1c1',
     mode: VisualizationMode.LINE_2D,
     title: '2D Line Plot',
     isDragging: false,
     dragOffset: { x: 0, y: 0 }
   },
+  // Row 1: Column 2 - 3D Partial Solution (Time Slice)
   {
-    id: 'panel-3d',
-    position: 'tr',
+    id: 'panel-3d-partial',
+    position: 'r1c2',
     mode: VisualizationMode.SURFACE_3D,
-    title: '3D Surface',
+    visualizationType: 'partial',
+    title: '3D Partial (Time Slice)',
     isDragging: false,
     dragOffset: { x: 0, y: 0 }
   },
+  // Row 1: Column 3 - Strip Animation
+  {
+    id: 'panel-strip',
+    position: 'r1c3',
+    mode: VisualizationMode.HEATMAP_STRIP,
+    title: 'Strip Animation',
+    isDragging: false,
+    dragOffset: { x: 0, y: 0 }
+  },
+  // Row 2: Column 1 - Heatmap
   {
     id: 'panel-heatmap',
-    position: 'bl',
+    position: 'r2c1',
     mode: VisualizationMode.HEATMAP,
     title: 'Heatmap',
     isDragging: false,
     dragOffset: { x: 0, y: 0 }
   },
+  // Row 2: Column 2 - 3D Complete Solution (Final)
   {
-    id: 'panel-strip',
-    position: 'br',
-    mode: VisualizationMode.HEATMAP_STRIP,
-    title: 'Strip Animation',
+    id: 'panel-3d-complete',
+    position: 'r2c2',
+    mode: VisualizationMode.SURFACE_3D,
+    visualizationType: 'complete',
+    title: '3D Complete Solution',
+    isDragging: false,
+    dragOffset: { x: 0, y: 0 }
+  },
+  // Row 2: Column 3 - 3D Trajectory Paths
+  {
+    id: 'panel-3d-trajectory',
+    position: 'r2c3',
+    mode: VisualizationMode.SURFACE_3D,
+    visualizationType: 'trajectory',
+    title: '3D Trajectory Paths',
     isDragging: false,
     dragOffset: { x: 0, y: 0 }
   }
@@ -115,22 +144,29 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
     return panels.find(p => p.position === position);
   };
 
-  // Get closest quadrant based on mouse position
-  const getClosestQuadrant = (clientX: number, clientY: number): PanelPosition | null => {
+  // Get closest grid cell based on mouse position (3x2 grid = 3 columns, 2 rows)
+  const getClosestGridPosition = (clientX: number, clientY: number): PanelPosition | null => {
     if (!gridRef.current) return null;
 
     const gridRect = gridRef.current.getBoundingClientRect();
     const relX = clientX - gridRect.left;
     const relY = clientY - gridRect.top;
 
-    const midX = gridRect.width / 2;
-    const midY = gridRect.height / 2;
+    // Determine which row (2 rows)
+    const rowThreshold = gridRect.height / 2;
+    const row = relY < rowThreshold ? 1 : 2;
 
-    if (relY < midY) {
-      return relX < midX ? 'tl' : 'tr';
-    } else {
-      return relX < midX ? 'bl' : 'br';
+    // Determine which column (3 columns)
+    const colThreshold1 = gridRect.width / 3;
+    const colThreshold2 = (gridRect.width * 2) / 3;
+    let col = 1;
+    if (relX >= colThreshold2) {
+      col = 3;
+    } else if (relX >= colThreshold1) {
+      col = 2;
     }
+
+    return (`r${row}c${col}` as PanelPosition);
   };
 
   // Swap panels between positions
@@ -178,7 +214,7 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
 
     if (!draggedPanel) return;
 
-    const targetPosition = getClosestQuadrant(e.clientX, e.clientY);
+    const targetPosition = getClosestGridPosition(e.clientX, e.clientY);
     if (!targetPosition) return;
 
     if (draggedPanel.position !== targetPosition) {
@@ -188,7 +224,7 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
     draggedPanelRef.current = null;
   };
 
-  // Render individual panel
+  // Render individual panel with support for different 3D visualization types
   const renderPanel = (position: PanelPosition) => {
     const panel = getPanelAtPosition(position);
     if (!panel) return null;
@@ -210,19 +246,27 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
         </div>
 
         <div className="draggable-panel-content">
-          <VisualizationCanvas
-            currentData={currentData}
-            allData={allData}
-            mode={panel.mode}
-            equationType={equationType}
-            title={panel.title}
-            showGrid={showGrid}
-            globalMin={globalMin}
-            globalMax={globalMax}
-            useFixedAxes={useFixedAxes}
-            colorScheme={colorScheme}
-            height={panelHeight}
-          />
+          {/* Handle different 3D visualization types */}
+          {panel.mode === VisualizationMode.SURFACE_3D && panel.visualizationType === 'trajectory' ? (
+            // Import Trajectory3DVisualization when available
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0' }}>
+              <p>3D Trajectory: Connect points sequentially showing temporal evolution</p>
+            </div>
+          ) : (
+            <VisualizationCanvas
+              currentData={currentData}
+              allData={allData}
+              mode={panel.mode}
+              equationType={equationType}
+              title={panel.title}
+              showGrid={showGrid}
+              globalMin={globalMin}
+              globalMax={globalMax}
+              useFixedAxes={useFixedAxes}
+              colorScheme={colorScheme}
+              height={panelHeight}
+            />
+          )}
         </div>
       </div>
     );
@@ -237,21 +281,19 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
 
       <div
         ref={gridRef}
-        className="draggable-grid-container"
+        className="draggable-grid-container-3x2"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
-        {/* Top-Left */}
-        {renderPanel('tl')}
+        {/* Row 1 */}
+        {renderPanel('r1c1')} {/* 2D Line Plot */}
+        {renderPanel('r1c2')} {/* 3D Partial */}
+        {renderPanel('r1c3')} {/* Strip Animation */}
 
-        {/* Top-Right */}
-        {renderPanel('tr')}
-
-        {/* Bottom-Left */}
-        {renderPanel('bl')}
-
-        {/* Bottom-Right */}
-        {renderPanel('br')}
+        {/* Row 2 */}
+        {renderPanel('r2c1')} {/* Heatmap */}
+        {renderPanel('r2c2')} {/* 3D Complete */}
+        {renderPanel('r2c3')} {/* 3D Trajectory */}
       </div>
 
       {/* Info Indicator */}
