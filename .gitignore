@@ -12,6 +12,8 @@ ENV/
 *.egg
 dist/
 build/
+*.md
+!README.md
 
 # Node
 node_modules/

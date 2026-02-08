@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { SimulationStatus, WebSocketCommand } from '../types/simulation';
+import { SimulationStatus } from '../types/simulation';
 
 /**
  * Props for the SimulationControls component
@@ -27,23 +27,32 @@ interface SimulationControlsProps {
   /** Maximum time value */
   maxTime: number;
 
-  /** Whether WebSocket is connected */
-  isConnected: boolean;
+  /** Whether a solution exists */
+  hasSolution: boolean;
 
-  /** Callback to send command to simulation */
-  onCommand: (command: WebSocketCommand) => void;
+  /** Callback to start playback */
+  onPlay: () => void;
+
+  /** Callback to pause playback */
+  onPause: () => void;
+
+  /** Callback to reset to frame 0 */
+  onReset: () => void;
 
   /** Callback to seek to a specific time step */
-  onSeek?: (timeStep: number) => void;
+  onSeek: (timeStep: number) => void;
 
-  /** Callback to reset simulation */
-  onReset?: () => void;
+  /** Callback to step forward one frame */
+  onStepForward: () => void;
+
+  /** Callback to step backward one frame */
+  onStepBackward: () => void;
+
+  /** Callback to change playback speed */
+  onSpeedChange: (speed: number) => void;
 
   /** Playback speed multiplier (default 1.0) */
   playbackSpeed?: number;
-
-  /** Callback to change playback speed */
-  onSpeedChange?: (speed: number) => void;
 
   /** Custom CSS class name */
   className?: string;
@@ -86,12 +95,15 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
   totalTimeSteps,
   currentTime,
   maxTime,
-  isConnected,
-  onCommand,
-  onSeek,
+  hasSolution,
+  onPlay,
+  onPause,
   onReset,
-  playbackSpeed = 1.0,
+  onSeek,
+  onStepForward,
+  onStepBackward,
   onSpeedChange,
+  playbackSpeed = 1.0,
   className = ''
 }) => {
   // Local state for slider value (for smooth dragging)
@@ -108,28 +120,18 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
    */
   const handlePlayPause = () => {
     if (status === SimulationStatus.RUNNING) {
-      onCommand(WebSocketCommand.PAUSE);
-    } else if (status === SimulationStatus.PAUSED || status === SimulationStatus.IDLE) {
-      onCommand(WebSocketCommand.START);
+      onPause();
+    } else {
+      onPlay();
     }
-  };
-
-  /**
-   * Handles stop button click
-   * Stops simulation and resets to beginning
-   */
-  const handleStop = () => {
-    onCommand(WebSocketCommand.STOP);
   };
 
   /**
    * Handles reset button click
-   * Resets simulation to initial state
+   * Resets simulation to frame 0
    */
-  const handleReset = () => {
-    if (onReset) {
-      onReset();
-    }
+  const handleResetClick = () => {
+    onReset();
   };
 
   /**
@@ -151,29 +153,23 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
    */
   const handleSliderRelease = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(event.target.value, 10);
-    if (onSeek) {
-      onSeek(value);
-    }
+    onSeek(value);
   };
 
   /**
    * Handles step forward button click
    * Advances one time step
    */
-  const handleStepForward = () => {
-    if (onSeek && currentTimeStep < totalTimeSteps - 1) {
-      onSeek(currentTimeStep + 1);
-    }
+  const handleStepForwardClick = () => {
+    onStepForward();
   };
 
   /**
    * Handles step backward button click
    * Goes back one time step
    */
-  const handleStepBackward = () => {
-    if (onSeek && currentTimeStep > 0) {
-      onSeek(currentTimeStep - 1);
-    }
+  const handleStepBackwardClick = () => {
+    onStepBackward();
   };
 
   /**
@@ -208,12 +204,12 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
   /**
    * Determines if controls should be disabled
    */
-  const isDisabled = !isConnected || status === SimulationStatus.ERROR;
+  const isDisabled = !hasSolution || status === SimulationStatus.ERROR;
 
   /**
    * Determines if play button should be disabled
    */
-  const isPlayDisabled = isDisabled || status === SimulationStatus.COMPLETED;
+  const isPlayDisabled = !hasSolution || status === SimulationStatus.ERROR;
 
   /**
    * Gets the appropriate icon for play/pause button
@@ -239,7 +235,7 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
     <div className={`simulation-controls ${className}`}>
       {/* Status indicator */}
       <div className="controls-status">
-        <StatusIndicator status={status} isConnected={isConnected} />
+        <StatusIndicator status={status} hasSolution={hasSolution} />
       </div>
 
       {/* Main controls */}
@@ -255,21 +251,10 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
           <span className="icon">{getPlayPauseIcon()}</span>
         </button>
 
-        {/* Stop button */}
-        <button
-          className="btn-control btn-stop"
-          onClick={handleStop}
-          disabled={isDisabled}
-          title="Stop"
-          aria-label="Stop"
-        >
-          <span className="icon">⏹</span>
-        </button>
-
         {/* Reset button */}
         <button
           className="btn-control btn-reset"
-          onClick={handleReset}
+          onClick={handleResetClick}
           disabled={isDisabled}
           title="Reset"
           aria-label="Reset"
@@ -280,7 +265,7 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
         {/* Step backward button */}
         <button
           className="btn-control btn-step"
-          onClick={handleStepBackward}
+          onClick={handleStepBackwardClick}
           disabled={isDisabled || currentTimeStep === 0}
           title="Step Backward"
           aria-label="Step Backward"
@@ -291,7 +276,7 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
         {/* Step forward button */}
         <button
           className="btn-control btn-step"
-          onClick={handleStepForward}
+          onClick={handleStepForwardClick}
           disabled={isDisabled || currentTimeStep >= totalTimeSteps - 1}
           title="Step Forward"
           aria-label="Step Forward"
@@ -316,8 +301,8 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
           max={totalTimeSteps - 1 || 0}
           value={sliderValue}
           onChange={handleSliderChange}
-          onMouseUp={handleSliderRelease}
-          onTouchEnd={handleSliderRelease}
+          onMouseUp={(e) => handleSliderRelease(e as any)}
+          onTouchEnd={(e) => handleSliderRelease(e as any)}
           disabled={isDisabled || totalTimeSteps === 0}
           aria-label="Time step"
         />
@@ -338,26 +323,24 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
       </div>
 
       {/* Playback speed control */}
-      {onSpeedChange && (
-        <div className="controls-speed">
-          <label htmlFor="speed-select" className="speed-label">
-            Speed:
-          </label>
-          <select
-            id="speed-select"
-            className="speed-select"
-            value={playbackSpeed}
-            onChange={handleSpeedChange}
-            disabled={isDisabled}
-          >
-            {SPEED_OPTIONS.map(speed => (
-              <option key={speed} value={speed}>
-                {speed}×
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="controls-speed">
+        <label htmlFor="speed-select" className="speed-label">
+          Speed:
+        </label>
+        <select
+          id="speed-select"
+          className="speed-select"
+          value={playbackSpeed}
+          onChange={handleSpeedChange}
+          disabled={isDisabled}
+        >
+          {SPEED_OPTIONS.map(speed => (
+            <option key={speed} value={speed}>
+              {speed}×
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };
@@ -369,8 +352,8 @@ interface StatusIndicatorProps {
   /** Current simulation status */
   status: SimulationStatus;
 
-  /** Whether WebSocket is connected */
-  isConnected: boolean;
+  /** Whether a solution exists */
+  hasSolution: boolean;
 }
 
 /**
@@ -380,13 +363,13 @@ interface StatusIndicatorProps {
  *
  * @param props - Component props
  */
-const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, isConnected }) => {
+const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, hasSolution }) => {
   /**
    * Gets the appropriate CSS class for the status
    */
   const getStatusClass = (): string => {
-    if (!isConnected) {
-      return 'status-disconnected';
+    if (!hasSolution) {
+      return 'status-idle';
     }
 
     switch (status) {
@@ -409,15 +392,15 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, isConnected }
    * Gets the status text to display
    */
   const getStatusText = (): string => {
-    if (!isConnected) {
-      return 'Disconnected';
+    if (!hasSolution) {
+      return 'No Solution';
     }
 
     switch (status) {
       case SimulationStatus.IDLE:
         return 'Ready';
       case SimulationStatus.RUNNING:
-        return 'Running';
+        return 'Playing';
       case SimulationStatus.PAUSED:
         return 'Paused';
       case SimulationStatus.COMPLETED:
@@ -433,8 +416,8 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, isConnected }
    * Gets the status icon
    */
   const getStatusIcon = (): string => {
-    if (!isConnected) {
-      return '⚠';
+    if (!hasSolution) {
+      return '○';
     }
 
     switch (status) {

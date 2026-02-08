@@ -13,8 +13,8 @@ class InitialConditionManager:
 
     def __init__(self):
         """Initialize initial condition manager."""
-        self.position_func: Callable[[np.ndarray], np.ndarray] = None
-        self.velocity_func: Callable[[np.ndarray], np.ndarray] = None
+        self.position_func: Callable[[np.ndarray], np.ndarray] = lambda x: np.zeros_like(x)
+        self.velocity_func: Callable[[np.ndarray], np.ndarray] = lambda x: np.zeros_like(x)
 
     def set_from_function(self, func: Callable[[np.ndarray], np.ndarray]):
         """
@@ -23,8 +23,7 @@ class InitialConditionManager:
         Args:
             func: Function that takes x array and returns u values
         """
-        # TODO: Implement function-based IC
-        pass
+        self.position_func = func
 
     def set_from_expression(self, expression: str):
         """
@@ -34,8 +33,24 @@ class InitialConditionManager:
         Args:
             expression: Mathematical expression string
         """
-        # TODO: Implement expression parsing and IC setting
-        pass
+        import ast
+        import operator
+        # Create a safe namespace for eval
+        safe_dict = {
+            'sin': np.sin,
+            'cos': np.cos,
+            'exp': np.exp,
+            'pi': np.pi,
+            'sqrt': np.sqrt,
+            'abs': np.abs
+        }
+        def expr_func(x):
+            safe_dict['x'] = x
+            try:
+                return eval(expression, {"__builtins__": {}}, safe_dict)
+            except:
+                return np.zeros_like(x)
+        self.position_func = expr_func
 
     def set_preset(self, preset_name: str, params: Dict[str, Any]):
         """
@@ -45,8 +60,68 @@ class InitialConditionManager:
             preset_name: Name of preset (gaussian, sine, square_wave, etc.)
             params: Parameters for the preset
         """
-        # TODO: Implement preset IC
-        pass
+        if preset_name == "gaussian":
+            center = params.get("center", 0.5)
+            width = params.get("width", 0.1)
+            amplitude = params.get("amplitude", 1.0)
+            self.position_func = self.get_gaussian(center, width, amplitude)
+        elif preset_name == "sine":
+            frequency = params.get("frequency", 1.0)
+            amplitude = params.get("amplitude", 1.0)
+            phase = params.get("phase", 0.0)
+            self.position_func = self.get_sine_wave(frequency, amplitude, phase)
+        elif preset_name == "square_wave":
+            amplitude = params.get("amplitude", 1.0)
+            def square_wave(x):
+                return amplitude * np.where(x < 0.5, 1.0, -1.0)
+            self.position_func = square_wave
+        elif preset_name == "triangle_wave":
+            amplitude = params.get("amplitude", 1.0)
+            def triangle_wave(x):
+                return amplitude * (1 - 2 * np.abs(x - 0.5))
+            self.position_func = triangle_wave
+        elif preset_name == "zero":
+            self.position_func = lambda x: np.zeros_like(x)
+        else:
+            # Default to zero
+            self.position_func = lambda x: np.zeros_like(x)
+
+    def get_initial_condition(self) -> Callable:
+        """
+        Get the current initial condition function.
+
+        Returns:
+            Position function
+        """
+        return self.position_func
+
+    def get_initial_velocity(self) -> Callable:
+        """
+        Get the current initial velocity function.
+
+        Returns:
+            Velocity function
+        """
+        return self.velocity_func
+
+    def set_initial_velocity(self, preset_name: str, params: Dict[str, Any] = None):
+        """
+        Set initial velocity from preset.
+
+        Args:
+            preset_name: Name of preset (zero, sine, gaussian, etc.)
+            params: Parameters for the preset
+        """
+        if params is None:
+            params = {}
+        if preset_name == "zero":
+            self.velocity_func = lambda x: np.zeros_like(x)
+        elif preset_name == "sine":
+            frequency = params.get("frequency", 1.0)
+            amplitude = params.get("amplitude", 1.0)
+            self.velocity_func = self.get_sine_wave(frequency, amplitude)
+        else:
+            self.velocity_func = lambda x: np.zeros_like(x)
 
     def get_gaussian(self, center: float, width: float, amplitude: float) -> Callable:
         """
@@ -60,8 +135,9 @@ class InitialConditionManager:
         Returns:
             Gaussian function
         """
-        # TODO: Implement Gaussian IC
-        pass
+        def gaussian(x):
+            return amplitude * np.exp(-((x - center) ** 2) / (2 * width ** 2))
+        return gaussian
 
     def get_sine_wave(self, frequency: float, amplitude: float, phase: float = 0) -> Callable:
         """
@@ -75,5 +151,6 @@ class InitialConditionManager:
         Returns:
             Sine wave function
         """
-        # TODO: Implement sine wave IC
-        pass
+        def sine_wave(x):
+            return amplitude * np.sin(2 * np.pi * frequency * x + phase)
+        return sine_wave

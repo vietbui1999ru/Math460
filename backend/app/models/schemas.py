@@ -38,9 +38,13 @@ class BoundaryCondition(BaseModel):
 
 class InitialCondition(BaseModel):
     """Initial condition configuration."""
-    preset: InitialConditionPreset = InitialConditionPreset.GAUSSIAN
+    type: InitialConditionPreset = InitialConditionPreset.GAUSSIAN
     expression: Optional[str] = None
-    params: Dict[str, Any] = Field(default_factory=dict)
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+
+    # Allow 'preset' and 'params' for backwards compatibility
+    class Config:
+        populate_by_name = True
 
 
 class SpatialDiscretization(BaseModel):
@@ -80,12 +84,15 @@ class PhysicalParameters(BaseModel):
 class SimulationConfig(BaseModel):
     """Complete simulation configuration."""
     equation_type: EquationType
-    spatial: SpatialDiscretization
-    temporal: TemporalDiscretization
-    physical: PhysicalParameters
-    boundary: BoundaryCondition
-    initial: InitialCondition
+    spatial_domain: SpatialDiscretization
+    temporal_domain: TemporalDiscretization
+    physical_parameters: PhysicalParameters
+    boundary_condition: BoundaryCondition
+    initial_condition: InitialCondition
     name: Optional[str] = "Unnamed Simulation"
+
+    class Config:
+        populate_by_name = True
 
 
 class ValidateConfigRequest(BaseModel):
@@ -118,3 +125,23 @@ class SimulationData(BaseModel):
     x_values: list[float]
     u_values: list[float]
     metadata: Optional[Dict[str, Any]] = None
+
+
+class SolutionMetadata(BaseModel):
+    """Metadata for complete solution response."""
+    global_min: float
+    global_max: float
+    nx: int
+    nt: int
+    computation_time_ms: float
+    stability_parameter: float
+
+
+class CompleteSolutionResponse(BaseModel):
+    """Complete solution response with all data at once."""
+    simulation_id: str
+    config: SimulationConfig
+    x_values: list[float]
+    t_values: list[float]
+    u_values: list[list[float]]
+    metadata: SolutionMetadata

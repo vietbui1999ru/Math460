@@ -55,6 +55,9 @@ class HeatEquationSolver:
 
         # Solution array
         self.u: Optional[np.ndarray] = None
+        self.u_initial: Optional[np.ndarray] = None
+        self.boundary_left: float = 0.0
+        self.boundary_right: float = 0.0
 
     def set_initial_condition(self, initial_func: Callable[[np.ndarray], np.ndarray]):
         """
@@ -63,8 +66,7 @@ class HeatEquationSolver:
         Args:
             initial_func: Function that takes x array and returns u values
         """
-        # TODO: Implement initial condition setting
-        pass
+        self.u_initial = initial_func(self.x)
 
     def set_boundary_conditions(self, left_val: float, right_val: float):
         """
@@ -74,8 +76,8 @@ class HeatEquationSolver:
             left_val: u(x_min, t)
             right_val: u(x_max, t)
         """
-        # TODO: Implement boundary condition setting
-        pass
+        self.boundary_left = left_val
+        self.boundary_right = right_val
 
     def check_stability(self) -> bool:
         """
@@ -84,8 +86,7 @@ class HeatEquationSolver:
         Returns:
             True if stable, False otherwise
         """
-        # TODO: Implement stability check
-        pass
+        return self.sigma < 0.5
 
     def solve(self) -> np.ndarray:
         """
@@ -94,5 +95,24 @@ class HeatEquationSolver:
         Returns:
             Solution array of shape (nt, nx)
         """
-        # TODO: Implement solver
-        pass
+        if self.u_initial is None:
+            raise ValueError("Initial condition not set")
+
+        # Build tri-diagonal matrix A
+        main_diag = (1 - 2 * self.sigma) * np.ones(self.nx)
+        off_diag = self.sigma * np.ones(self.nx - 1)
+
+        A = np.diag(main_diag) + np.diag(off_diag, k=1) + np.diag(off_diag, k=-1)
+
+        # Initialize solution matrix (nt x nx)
+        u_matrix = np.zeros((self.nt, self.nx))
+        u_matrix[0, :] = self.u_initial
+
+        # Time-stepping loop
+        for i in range(self.nt - 1):
+            u_matrix[i + 1, :] = A @ u_matrix[i, :]
+            # Enforce boundary conditions
+            u_matrix[i + 1, 0] = self.boundary_left
+            u_matrix[i + 1, -1] = self.boundary_right
+
+        return u_matrix
