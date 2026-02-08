@@ -170,7 +170,7 @@ export const PresetSelector: React.FC<PresetSelectorProps> = ({
         <select
           id="preset-select"
           className="preset-select"
-          value={selectedPresetId || ''}
+          value={selectedPresetId}
           onChange={handleDropdownChange}
         >
           <option value="">-- Select a preset --</option>
@@ -235,8 +235,8 @@ const PresetCard: React.FC<PresetCardProps> = ({ preset, isSelected, onClick }) 
     const { equation_type, spatial_domain, temporal_domain } = preset.config;
 
     return `${equation_type.toUpperCase()} | ` +
-           `x ∈ [${spatial_domain.x_min}, ${spatial_domain.x_max}] | ` +
-           `t ∈ [${temporal_domain.t_min}, ${temporal_domain.t_max}]`;
+      `x ∈ [${spatial_domain.x_min}, ${spatial_domain.x_max}] | ` +
+      `t ∈ [${temporal_domain.t_min}, ${temporal_domain.t_max}]`;
   };
 
   return (
