@@ -1,12 +1,25 @@
 # PDE Simulation Platform
 
-A modern full-stack web application for solving and visualizing **Heat** and **Wave** equations using finite difference methods. Built with FastAPI, React, and Plotly.js for real-time interactive simulations.
+A full-stack web app for solving and visualizing partial differential equations using finite difference methods.
+
+This is a passion project that I have been building and researching since my Partial Differential Equations class at Augustana College, 2023. After helping many of my classmates with our Heat & Wave Equation Lab work in Python, I decided to break our computer lab questions programmatically and build a visualizer tool for different modelling and PDE equations for the Heat & Wave formulas.
+
+Solves the **Heat Equation** (Forward Euler, thermal diffusion) and **Wave Equation** (central differences, wave propagation) with automatic CFL stability validation. Users configure spatial/temporal grids, boundary conditions, and initial conditions through an interactive UI, then watch the solution animate in real-time.
+
+1. **Backend**: FastAPI + NumPy computes the complete solution in one request (`POST /api/simulations/solve`). Includes 6 preset configurations (3 heat, 3 wave) and stability checking before simulation.
+
+2. **Frontend**: React + TypeScript + Plotly.js with client-side playback control. Supports 2D line plots, 3D surface plots, heatmaps, and a grid view.
+
+Animation runs at 50 FPS with play/pause/reset, frame scrubbing, step controls, and 0.25x-4x speed adjustment. Axes are fixed from global min/max to prevent jumping.
+
+**Key design choice**: The entire solution matrix (`u_values[nt][nx]`) is computed once and returned to the client, enabling instant replay without re-computation. This trades memory for responsiveness — typical simulations are 1-5 MB.
+
+Dockerized with multi-stage builds and nginx reverse proxy for production deployment. `make dev` for local development with hot-reload.
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Demo](#demo)
 - [The Mathematics: Finite Difference Method](#the-mathematics-finite-difference-method)
 - [System Architecture](#system-architecture)
@@ -17,25 +30,6 @@ A modern full-stack web application for solving and visualizing **Heat** and **W
 - [Project Structure](#project-structure)
 - [Development](#development)
 - [Roadmap](#roadmap)
-
----
-
-## Overview
-
-This platform solves partial differential equations (PDEs) numerically and visualizes the results in real-time. It supports:
-
-- **Heat Equation**: Models heat diffusion/conduction
-- **Wave Equation**: Models wave propagation (strings, acoustics)
-
-### Key Features
-
-| Feature | Description |
-|---------|-------------|
-| **Real-time Visualization** | 2D line plots, 3D surfaces, and heatmaps via Plotly.js |
-| **Client-side Playback** | Smooth 50 FPS animation with speed controls |
-| **CFL Stability Validation** | Automatic checks before simulation |
-| **Preset Configurations** | 6 built-in scenarios for quick demos |
-| **Docker Deployment** | One-command production deployment |
 
 ---
 
