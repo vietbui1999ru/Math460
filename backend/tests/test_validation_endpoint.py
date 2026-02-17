@@ -175,7 +175,7 @@ def print_payload(name: str, payload: dict):
 if __name__ == "__main__":
     print("VALIDATION ENDPOINT TEST PAYLOADS")
     print("Use these payloads to test POST /api/simulations/validate")
-    print("\nEndpoint: http://localhost:8000/api/simulations/validate")
+    print("\nEndpoint: http://localhost:8001/api/simulations/validate")
     print("Method: POST")
     print("Content-Type: application/json")
 
@@ -190,11 +190,11 @@ if __name__ == "__main__":
     print("="*60)
 
     print("\n# Test minimal heat config:")
-    print("curl -X POST http://localhost:8000/api/simulations/validate \\")
+    print("curl -X POST http://localhost:8001/api/simulations/validate \\")
     print("  -H 'Content-Type: application/json' \\")
     print(f"  -d '{json.dumps(MINIMAL_HEAT_CONFIG)}'")
 
     print("\n# Test minimal wave config:")
-    print("curl -X POST http://localhost:8000/api/simulations/validate \\")
+    print("curl -X POST http://localhost:8001/api/simulations/validate \\")
     print("  -H 'Content-Type: application/json' \\")
     print(f"  -d '{json.dumps(MINIMAL_WAVE_CONFIG)}'")

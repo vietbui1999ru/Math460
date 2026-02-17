@@ -146,7 +146,7 @@ TEST_CASES = [
 ]
 
 
-def test_endpoint(base_url: str = "http://localhost:8000"):
+def test_endpoint(base_url: str = "http://localhost:8001"):
     """Test the validation endpoint with various payloads."""
     endpoint = f"{base_url}/api/simulations/validate"
 
@@ -214,7 +214,7 @@ def test_endpoint(base_url: str = "http://localhost:8000"):
 
         except requests.exceptions.ConnectionError:
             print("RESULT: ERROR - Cannot connect to server")
-            print("Make sure the backend server is running on http://localhost:8000")
+            print("Make sure the backend server is running on http://localhost:8001")
             results["failed"] += 1
             results["errors"].append({
                 "test": test_case["name"],
@@ -253,7 +253,7 @@ def test_endpoint(base_url: str = "http://localhost:8000"):
 if __name__ == "__main__":
     print("\nChecking server health...")
     try:
-        health_response = requests.get("http://localhost:8000/health", timeout=2)
+        health_response = requests.get("http://localhost:8001/health", timeout=2)
         if health_response.status_code == 200:
             print("Server is running!")
             print("\nStarting tests...\n")

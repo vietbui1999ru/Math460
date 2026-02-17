@@ -24,13 +24,13 @@ install:
 
 dev:
 	@echo "Starting development servers..."
-	@echo "Backend: http://localhost:8000"
+	@echo "Backend: http://localhost:8001"
 	@echo "Frontend: http://localhost:5743"
 	@echo ""
 	@make -j2 dev-backend dev-frontend
 
 dev-backend:
-	cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 
 dev-frontend:
 	cd frontend && npm run dev
@@ -43,8 +43,8 @@ up:
 	docker-compose up -d
 	@echo "Services started!"
 	@echo "Frontend: http://localhost"
-	@echo "Backend API: http://localhost:8000"
-	@echo "API Docs: http://localhost:8000/docs"
+	@echo "Backend API: http://localhost:8001"
+	@echo "API Docs: http://localhost:8001/docs"
 
 up-dev:
 	docker-compose -f docker-compose.dev.yml up

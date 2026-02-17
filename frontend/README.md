@@ -43,8 +43,8 @@ cp .env.example .env.local
 
 2. Update `.env.local` with your backend URL:
 ```env
-VITE_API_BASE_URL=http://localhost:8000
-VITE_WS_BASE_URL=ws://localhost:8000
+VITE_API_BASE_URL=http://localhost:8001
+VITE_WS_BASE_URL=ws://localhost:8001
 ```
 
 ### Development
@@ -200,7 +200,7 @@ The application uses a modern dark theme with:
 ### Backend Connection Issues
 ```bash
 # Check if backend is running
-curl http://localhost:8000/health
+curl http://localhost:8001/health
 
 # Verify environment variables
 cat .env.local

@@ -9,6 +9,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import VisualizationCanvas, { VisualizationMode } from './VisualizationCanvas';
 import Trajectory3DVisualization from './Trajectory3DVisualization';
+import Partial3DSolution from './Partial3DSolution';
 import { SimulationData, EquationType } from '../types/simulation';
 
 /**
@@ -232,6 +233,79 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
 
     const panelHeight = '100%';
 
+    // Determine which component to render based on panel type
+    const renderVisualization = () => {
+      // 3D Trajectory visualization
+      if (panel.mode === VisualizationMode.SURFACE_3D && panel.visualizationType === 'trajectory') {
+        return (
+          <Trajectory3DVisualization
+            allData={allData}
+            equationType={equationType}
+            globalMin={globalMin}
+            globalMax={globalMax}
+            height="100%"
+            colorScheme={colorScheme}
+            showGrid={showGrid}
+            title={panel.title}
+            samplingRate={allData.length > 50 ? 2 : 1}
+          />
+        );
+      }
+
+      // 3D Partial Solution (Time Slice) - animated with current time
+      if (panel.mode === VisualizationMode.SURFACE_3D && panel.visualizationType === 'partial') {
+        if (allData.length < 2) {
+          return (
+            <div style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#a0a0a0'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <p>Insufficient data for partial 3D</p>
+                <p style={{ fontSize: '0.85rem', color: '#707070' }}>
+                  Run simulation to collect data
+                </p>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <Partial3DSolution
+            allData={allData}
+            currentTimeIndex={currentTimeIndex}
+            equationType={equationType}
+            timeSliceSize={Math.min(15, Math.floor(totalTimeSteps / 4))}
+            globalMin={globalMin}
+            globalMax={globalMax}
+            colorScheme={colorScheme}
+            showGrid={showGrid}
+            height="100%"
+            title={`${panel.title} (t=${allData[currentTimeIndex]?.time_value?.toFixed(4) || '0'})`}
+          />
+        );
+      }
+
+      // Default: VisualizationCanvas for all other modes (2D, heatmap, complete 3D, etc.)
+      return (
+        <VisualizationCanvas
+          currentData={currentData}
+          allData={allData}
+          mode={panel.mode}
+          equationType={equationType}
+          title={panel.title}
+          showGrid={showGrid}
+          globalMin={globalMin}
+          globalMax={globalMax}
+          useFixedAxes={useFixedAxes}
+          colorScheme={colorScheme}
+          height={panelHeight}
+        />
+      );
+    };
+
     return (
       <div
         key={panel.id}
@@ -247,34 +321,7 @@ export const DraggableGridVisualization: React.FC<DraggableGridVisualizationProp
         </div>
 
         <div className="draggable-panel-content">
-          {/* Handle different 3D visualization types */}
-          {panel.mode === VisualizationMode.SURFACE_3D && panel.visualizationType === 'trajectory' ? (
-            <Trajectory3DVisualization
-              allData={allData}
-              equationType={equationType}
-              globalMin={globalMin}
-              globalMax={globalMax}
-              height="100%"
-              colorScheme={colorScheme}
-              showGrid={showGrid}
-              title={panel.title}
-              samplingRate={allData.length > 50 ? 2 : 1}
-            />
-          ) : (
-            <VisualizationCanvas
-              currentData={currentData}
-              allData={allData}
-              mode={panel.mode}
-              equationType={equationType}
-              title={panel.title}
-              showGrid={showGrid}
-              globalMin={globalMin}
-              globalMax={globalMax}
-              useFixedAxes={useFixedAxes}
-              colorScheme={colorScheme}
-              height={panelHeight}
-            />
-          )}
+          {renderVisualization()}
         </div>
       </div>
     );

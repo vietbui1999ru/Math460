@@ -667,8 +667,8 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 
 **Frontend** (`frontend/.env`):
 ```bash
-VITE_API_BASE_URL=http://localhost:8000
-VITE_WS_BASE_URL=ws://localhost:8000
+VITE_API_BASE_URL=http://localhost:8001
+VITE_WS_BASE_URL=ws://localhost:8001
 ```
 
 ---

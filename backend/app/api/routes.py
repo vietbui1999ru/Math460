@@ -35,7 +35,7 @@ async def create_simulation(config: SimulationConfig):
     return SimulationResponse(
         simulation_id=simulation_id,
         status="created",
-        websocket_url=f"ws://localhost:8000/ws/simulation/{simulation_id}"
+        websocket_url=f"ws://localhost:8001/ws/simulation/{simulation_id}"
     )
 
 
