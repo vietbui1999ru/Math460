@@ -7,6 +7,7 @@ A modern full-stack web application for solving and visualizing **Heat** and **W
 ## Table of Contents
 
 - [Overview](#overview)
+- [Demo](#demo)
 - [The Mathematics: Finite Difference Method](#the-mathematics-finite-difference-method)
 - [System Architecture](#system-architecture)
 - [Technology Stack](#technology-stack)
@@ -35,6 +36,26 @@ This platform solves partial differential equations (PDEs) numerically and visua
 | **CFL Stability Validation** | Automatic checks before simulation |
 | **Preset Configurations** | 6 built-in scenarios for quick demos |
 | **Docker Deployment** | One-command production deployment |
+
+---
+
+## Demo
+
+### Heat Equation — Sine Wave Decay
+
+![Heat Equation Demo](demo/heat.gif)
+
+> Thermal diffusion of a sine wave initial condition. The temperature profile smoothly decays toward equilibrium as heat dissipates through the material.
+
+![Heat Equation UI](demo/Screenshot%202026-02-16%20at%2021-20-24%20PDE%20Simulation%20Platform.png)
+
+### Wave Equation — Plucked String
+
+![Wave Equation Demo](demo/wave.gif)
+
+> A plucked string vibrating over time. The wave reflects off fixed boundaries and produces standing wave patterns characteristic of string instruments.
+
+![Wave Equation UI](demo/Screenshot%202026-02-16%20at%2021-19-43%20PDE%20Simulation%20Platform.png)
 
 ---
 
